@@ -65,7 +65,7 @@ namespace {
         }
     }
 }
-#define CHECK_HIP(cmd) check_hip(cmd, __FILE__, __LINE__)
+#define CHECK_HIP(cmd) GpuComm::check_hip(cmd, __FILE__, __LINE__)
 
 // --------------------------------------------------------------------------
 // Concrete Unified Request Class

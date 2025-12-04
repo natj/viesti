@@ -1,6 +1,6 @@
-# GpuComm
+# Viesti
 
-**GpuComm** is a lightweight, high-performance C++ communication abstraction library designed for GPU-centric HPC applications. It provides a unified, intuitive interface for GPU-to-GPU message passing, abstracting away the complexities of mixing underlying backends like MPI and RCCL.
+**Viesti** is a lightweight, high-performance C++ communication abstraction library designed for GPU-centric HPC applications. It provides a unified, intuitive interface for GPU-to-GPU message passing, abstracting away the complexities of mixing underlying backends like MPI and RCCL.
 
 The library supports simultaneous usage of different backends for One-Sided (RMA) and Two-Sided (P2P) communication, selectable entirely at compile-time to avoid runtime overhead.
 

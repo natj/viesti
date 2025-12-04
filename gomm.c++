@@ -377,29 +377,29 @@ int main(int argc, char** argv) {
   // --------------------------------------------------
   // TEST 1: ONE SIDED COMMUNICATION
   // --------------------------------------------------
-  int buf_id_A = 10;
-  int buf_id_B = 20;
-  comm.register_buffer(buf_A, size_bytes, buf_id_A);
-  comm.register_buffer(buf_B, size_bytes, buf_id_B);
-  comm.barrier();
-  
-  int target_rank = 1; 
-  comm.lock_buffer(target_rank, buf_id_A);
-  comm.lock_buffer(target_rank, buf_id_B);
+  //int buf_id_A = 10;
+  //int buf_id_B = 20;
+  //comm.register_buffer(buf_A, size_bytes, buf_id_A);
+  //comm.register_buffer(buf_B, size_bytes, buf_id_B);
+  //comm.barrier();
+  //
+  //int target_rank = 1; 
+  //comm.lock_buffer(target_rank, buf_id_A);
+  //comm.lock_buffer(target_rank, buf_id_B);
 
-  std::vector<GpuComm::Request> reqs_rma;
+  //std::vector<GpuComm::Request> reqs_rma;
 
-  if (rank == 0) {
-    reqs_rma.push_back( comm.put(buf_A, count, target_rank, buf_id_A) );
-    reqs_rma.push_back( comm.put(buf_B, count, target_rank, buf_id_B) );
+  //if (rank == 0) {
+  //  reqs_rma.push_back( comm.put(buf_A, count, target_rank, buf_id_A) );
+  //  reqs_rma.push_back( comm.put(buf_B, count, target_rank, buf_id_B) );
 
-    for(auto& req : reqs) req.wait();
-    std::cout << rank << ": rank 0 Put data (RMA) into A and B buffers." << std::endl;
-  }
-  
-  comm.unlock_buffer(target_rank, buf_id_A);
-  comm.unlock_buffer(target_rank, buf_id_B);
-  comm.barrier();
+  //  for(auto& req : reqs) req.wait();
+  //  std::cout << rank << ": rank 0 Put data (RMA) into A and B buffers." << std::endl;
+  //}
+  //
+  //comm.unlock_buffer(target_rank, buf_id_A);
+  //comm.unlock_buffer(target_rank, buf_id_B);
+  //comm.barrier();
 
 
   // --------------------------------------------------

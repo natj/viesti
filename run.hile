@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH -J viesti              # job name
 #SBATCH -C g                   # c=cpu, g=gpu
-#SBATCH --output=%J.out        # stdout
-#SBATCH --error=%J.err         # stderr
+#SBATCH --output=test.out        # stdout
+#SBATCH --error=test.err         # stderr
 #SBATCH -t 00-00:01:00         # max run time
 #SBATCH --nodes=2              # nodes; simulation size controlled w/ this
 

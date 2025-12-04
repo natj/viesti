@@ -62,4 +62,4 @@ export FI_CXI_RX_MATCH_MODE=hybrid # in case hardware storage overflows, we use 
  
 #--------------------------------------------------
 # application 
-srun --mpi=cray_shasta --cpu-bind=verbose ./hile_select_gpu ./gomm
+srun --mpi=cray_shasta --cpu-bind=verbose ./hile_select_gpu ./viesti

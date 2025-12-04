@@ -29,7 +29,7 @@
 // LIBRARY DEFINITION
 // ============================================================================
 
-namespace GpuComm {
+namespace viesti {
 
 enum class DataType { FLOAT, DOUBLE, INT, UNKNOWN };
 
@@ -65,7 +65,7 @@ namespace {
         }
     }
 }
-#define CHECK_HIP(cmd) GpuComm::check_hip(cmd, __FILE__, __LINE__)
+#define CHECK_HIP(cmd) viesti::check_hip(cmd, __FILE__, __LINE__)
 
 // --------------------------------------------------------------------------
 // Concrete Unified Request Class
@@ -339,7 +339,7 @@ public:
     }
 };
 
-} // namespace GpuComm
+} // namespace viesti
 
 
 // ============================================================================
@@ -352,7 +352,7 @@ int main(int argc, char** argv) {
   CHECK_HIP(hipStreamCreate(&stream));
 
   // --- Display Active Configuration ---
-  std::cout << "GpuComm Configuration:" << std::endl;
+  std::cout << "viesti Configuration:" << std::endl;
 #ifdef MPI_RMA
   std::cout << "  RMA Backend: MPI" << std::endl;
 #elif defined(HIP_RMA)
@@ -367,7 +367,7 @@ int main(int argc, char** argv) {
 
 
   // Instantiate directly
-  GpuComm::Communicator comm(&argc, &argv, stream);
+  viesti::Communicator comm(&argc, &argv, stream);
   int rank = comm.rank();
 
   // --- Data Init ---
@@ -408,7 +408,7 @@ int main(int argc, char** argv) {
     // lock the target windows 
     comm.lock_buffer(target_rank, buf_id_A);
 
-    std::vector<GpuComm::Request> reqs_rma;
+    std::vector<viesti::Request> reqs_rma;
     reqs_rma.push_back( comm.put(buf_A_dev, count, target_rank, buf_id_A) );
 
     for(auto& req : reqs_rma) req.wait();
@@ -492,7 +492,7 @@ int main(int argc, char** argv) {
   //NCCL treats all calls between start and end as a single call to many devices.
 
 
-  std::vector<GpuComm::Request> reqs_p2p;
+  std::vector<viesti::Request> reqs_p2p;
   int tag = 42;
 
   if (rank == 0) {

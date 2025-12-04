@@ -1,6 +1,6 @@
 # CXX      = hipcc
-SRC      = gomm.c++
-TARGET   = gomm
+SRC      = viesti.c++
+TARGET   = viesti
 
 # --- Configuration Flags ---
 # Hybrid Mode:  -DMPI_RMA -DHIP_P2P

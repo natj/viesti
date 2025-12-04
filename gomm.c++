@@ -259,7 +259,16 @@ public:
     Request put(const void* src, size_t count, DataType type, int target_rank, int buffer_id) {
 #ifdef MPI_RMA
         MPI_Request req;
-        MPI_Rput(src, count, to_mpi_type(type), target_rank, 0, count, to_mpi_type(type), windows_.at(buffer_id), &req);
+        int target_displacement = 0;
+        MPI_Rput(src,                       // origin address
+                 count,                     // origin count
+                 to_mpi_type(type),         // data type
+                 target_rank,               // destination rank
+                 target_displacement,       // displacement from start of window to target buffer 
+                 count,                     // target count
+                 to_mpi_type(type),         // target datatype
+                 windows_.at(buffer_id),    // mpi window
+                 &req);                     // request
         return Request(req);
 #elif defined(HIP_RMA)
         throw std::runtime_error("HIP_RMA Put not implemented");

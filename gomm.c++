@@ -410,8 +410,8 @@ int main(int argc, char** argv) {
   //comm.unlock_buffer(target_rank, buf_id_B);
   //comm.barrier();
 
-  CHECK_HIP(hipMemcpy(buf_A_host.data(), buf_A_dev, size_bytes, hipMemcpyDeviceToHost));
-  CHECK_HIP(hipMemcpy(buf_B_host.data(), buf_B_dev, size_bytes, hipMemcpyDeviceToHost));
+  //CHECK_HIP(hipMemcpy(buf_A_host.data(), buf_A_dev, size_bytes, hipMemcpyDeviceToHost));
+  //CHECK_HIP(hipMemcpy(buf_B_host.data(), buf_B_dev, size_bytes, hipMemcpyDeviceToHost));
 
   // --------------------------------------------------
   // TEST 2: SEND / RECV
@@ -431,10 +431,10 @@ int main(int argc, char** argv) {
 
   for(auto& req : reqs_p2p) req.wait();
   
-  std::cout << rank << ": finished send/recv into C buffer." << std::endl;
 
   CHECK_HIP(hipMemcpy(buf_C_host.data(), buf_C_dev, size_bytes, hipMemcpyDeviceToHost));
 
+  std::cout << rank << ": finished send/recv into C buffer" << buf_C_host[0] << std::endl;
 
   //--------------------------------------------------
   CHECK_HIP(hipFree(buf_A_dev));

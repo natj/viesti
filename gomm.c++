@@ -319,8 +319,8 @@ public:
     // Templated Helpers
     // ========================================================================
     template <typename T>
-    Request put(const T* src, size_t count, int target_rank, int buffer_id, int tag) {
-        return put(src, count, TypeTraits<T>::value, target_rank, buffer_id, tag);
+    Request put(const T* src, size_t count, int target_rank, int buffer_id) {
+        return put(src, count, TypeTraits<T>::value, target_rank, buffer_id);
     }
 
     template <typename T>
@@ -402,7 +402,7 @@ int main(int argc, char** argv) {
     reqs_rma.push_back( comm.put(buf_A_dev, count, target_rank, buf_id_A) );
     reqs_rma.push_back( comm.put(buf_B_dev, count, target_rank, buf_id_B) );
 
-    for(auto& req : reqs) req.wait();
+    for(auto& req : reqs_rma) req.wait();
     std::cout << rank << ": rank 0 Put data (RMA) into A and B buffers." << std::endl;
   }
   

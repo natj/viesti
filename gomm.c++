@@ -253,7 +253,10 @@ public:
 #endif
     }
 
-    Request put(const void* src, size_t count, DataType type, int target_rank, int buffer_id, int tag) {
+    // TODO: methods to lock/unlock all buffers
+
+
+    Request put(const void* src, size_t count, DataType type, int target_rank, int buffer_id) {
 #ifdef MPI_RMA
         MPI_Request req;
         MPI_Rput(src, count, to_mpi_type(type), target_rank, 0, count, to_mpi_type(type), windows_.at(buffer_id), &req);
@@ -362,55 +365,66 @@ int main(int argc, char** argv) {
   CHECK_HIP(hipMalloc(&buf_B, size_bytes)); 
   CHECK_HIP(hipMalloc(&buf_C, size_bytes)); 
 
-  std::vector<float> h_A(count, 1.0f);
-  std::vector<float> h_B(count, 2.0f);
-  std::vector<float> h_C(count, rank == 0 ? 100.0f : 0.0f);
+  std::vector<float> h_A(count, rank == 0 ? 1.0f : 0.0f);
+  std::vector<float> h_B(count, rank == 0 ? 2.0f : 0.0f);
+  std::vector<float> h_C(count, rank == 0 ? 3.0f : 0.0f);
   
   CHECK_HIP(hipMemcpy(buf_A, h_A.data(), size_bytes, hipMemcpyHostToDevice));
   CHECK_HIP(hipMemcpy(buf_B, h_B.data(), size_bytes, hipMemcpyHostToDevice));
   CHECK_HIP(hipMemcpy(buf_C, h_C.data(), size_bytes, hipMemcpyHostToDevice));
 
+
   // --------------------------------------------------
   // TEST 1: ONE SIDED COMMUNICATION
   // --------------------------------------------------
-#ifdef MPI_RMA
   int buf_id_A = 10;
+  int buf_id_B = 20;
   comm.register_buffer(buf_A, size_bytes, buf_id_A);
+  comm.register_buffer(buf_B, size_bytes, buf_id_B);
   comm.barrier();
   
-  int target = 1; 
-  comm.lock_buffer(target, buf_id_A);
+  int target_rank = 1; 
+  comm.lock_buffer(target_rank, buf_id_A);
+  comm.lock_buffer(target_rank, buf_id_B);
+
+  std::vector<GpuComm::Request> reqs_rma;
 
   if (rank == 0) {
-    auto req = comm.put(buf_C, count, target, buf_id_A, 0);
-    req.wait();
-    std::cout << "Rank 0 Put data (RMA)." << std::endl;
+    reqs_rma.push_back( comm.put(buf_A, count, target_rank, buf_id_A) );
+    reqs_rma.push_back( comm.put(buf_B, count, target_rank, buf_id_B) );
+
+    for(auto& req : reqs) req.wait();
+    std::cout << rank << ": rank 0 Put data (RMA) into A and B buffers." << std::endl;
   }
   
-  comm.unlock_buffer(target, buf_id_A);
+  comm.unlock_buffer(target_rank, buf_id_A);
+  comm.unlock_buffer(target_rank, buf_id_B);
   comm.barrier();
-#endif
+
 
   // --------------------------------------------------
   // TEST 2: SEND / RECV
   // --------------------------------------------------
   comm.start_sendrecv();
 
-  std::vector<GpuComm::Request> requests;
-  requests.reserve(2);
+  std::vector<GpuComm::Request> reqs_p2p;
+  int tag = 42;
 
   if (rank == 0) {
-    requests.push_back(comm.send(buf_C, count, 1, 666));
+    reqs_p2p.push_back(comm.send(buf_C, count, 1, tag));
   } else if (rank == 1) {
-    requests.push_back(comm.recv(buf_C, count, 0, 666));
+    reqs_p2p.push_back(comm.recv(buf_C, count, 0, tag));
   }
 
   comm.end_sendrecv();
 
-  for(auto& req : requests) req.wait();
+  for(auto& req : reqs_p2p) req.wait();
   
-  if (rank == 1) std::cout << "Rank 1 finished recv (P2P)." << std::endl;
+  std::cout << rank << ": finished send/recv into C buffer." << std::endl;
 
+
+
+  //--------------------------------------------------
   CHECK_HIP(hipFree(buf_A));
   CHECK_HIP(hipFree(buf_B));
   CHECK_HIP(hipFree(buf_C));

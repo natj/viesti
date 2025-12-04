@@ -84,6 +84,8 @@ private:
         hipEvent_t hip_event;
     } handle_;
 
+    hipStream_t stream_;
+
 public:
     // MPI Constructor
     Request(MPI_Request req) : type_(Type::MPI), active_(true) {
@@ -91,7 +93,8 @@ public:
     }
 
     // HIP Constructor
-    Request(hipStream_t stream) : type_(Type::HIP), active_(true) {
+    Request(hipStream_t stream) : type_(Type::HIP), active_(true), stream_(stream)
+	{
         CHECK_HIP(hipEventCreate(&handle_.hip_event));
         CHECK_HIP(hipEventRecord(handle_.hip_event, stream));
     }
@@ -100,7 +103,12 @@ public:
     Request(const Request&) = delete;
     Request& operator=(const Request&) = delete;
     
-    Request(Request&& other) noexcept : type_(other.type_), active_(other.active_), handle_(other.handle_) {
+    Request(Request&& other) noexcept : 
+	    type_(other.type_), 
+	    active_(other.active_), 
+	    stream_(other.stream_), 
+	    handle_(other.handle_) 
+	{
         other.active_ = false;
     }
 
@@ -109,6 +117,7 @@ public:
             if (active_) wait();
             type_ = other.type_;
             active_ = other.active_;
+	    stream_ = other.stream_;
             handle_ = other.handle_;
             other.active_ = false;
         }
@@ -131,7 +140,8 @@ public:
                 MPI_Wait(&handle_.mpi_req, MPI_STATUS_IGNORE);
             }
         } else {
-            CHECK_HIP(hipEventSynchronize(handle_.hip_event));
+            //CHECK_HIP(hipEventSynchronize(handle_.hip_event));
+            CHECK_HIP(hipStreamSynchronize(stream_));
         }
         active_ = false;
     }
@@ -496,13 +506,13 @@ int main(int argc, char** argv) {
   std::vector<viesti::Request> reqs_p2p;
   int tag = 42;
 
-  if (rank == 0) {
+  //if (rank == 0) {
     reqs_p2p.push_back(comm.send(buf_C_dev, count, 1, tag));
     std::cout << rank << ": send " << buf_C_host[0] << std::endl;
-  } else if (rank == 1) {
+  //} else if (rank == 1) {
     reqs_p2p.push_back(comm.recv(buf_C_dev, count, 0, tag));
     std::cout << rank << ": recv " << buf_C_host[0] << std::endl;
-  }
+  //}
 
   comm.end_sendrecv(); // close comm epoch and launch tasks on GPU
   std::cout << rank << ": end " << buf_C_host[0] << std::endl;

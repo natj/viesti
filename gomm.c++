@@ -368,19 +368,19 @@ int main(int argc, char** argv) {
   // --- Data Init ---
   size_t count = 1024;
   size_t size_bytes = count * sizeof(float);
-  float *buf_A, *buf_B, *buf_C;
+  float *buf_A_dev, *buf_B_dev, *buf_C_dev;
   
-  CHECK_HIP(hipMalloc(&buf_A, size_bytes)); 
-  CHECK_HIP(hipMalloc(&buf_B, size_bytes)); 
-  CHECK_HIP(hipMalloc(&buf_C, size_bytes)); 
+  CHECK_HIP(hipMalloc(&buf_A_dev, size_bytes)); 
+  CHECK_HIP(hipMalloc(&buf_B_dev, size_bytes)); 
+  CHECK_HIP(hipMalloc(&buf_C_dev, size_bytes)); 
 
-  std::vector<float> h_A(count, rank == 0 ? 1.0f : 0.0f);
-  std::vector<float> h_B(count, rank == 0 ? 2.0f : 0.0f);
-  std::vector<float> h_C(count, rank == 0 ? 3.0f : 0.0f);
+  std::vector<float> buf_A_host(count, rank == 0 ? 1.0f : 0.0f);
+  std::vector<float> buf_B_host(count, rank == 0 ? 2.0f : 0.0f);
+  std::vector<float> buf_C_host(count, rank == 0 ? 3.0f : 0.0f);
   
-  CHECK_HIP(hipMemcpy(buf_A, h_A.data(), size_bytes, hipMemcpyHostToDevice));
-  CHECK_HIP(hipMemcpy(buf_B, h_B.data(), size_bytes, hipMemcpyHostToDevice));
-  CHECK_HIP(hipMemcpy(buf_C, h_C.data(), size_bytes, hipMemcpyHostToDevice));
+  CHECK_HIP(hipMemcpy(buf_A_dev, buf_A_host.data(), size_bytes, hipMemcpyHostToDevice));
+  CHECK_HIP(hipMemcpy(buf_B_dev, buf_B_host.data(), size_bytes, hipMemcpyHostToDevice));
+  CHECK_HIP(hipMemcpy(buf_C_dev, buf_C_host.data(), size_bytes, hipMemcpyHostToDevice));
 
 
   // --------------------------------------------------
@@ -388,8 +388,8 @@ int main(int argc, char** argv) {
   // --------------------------------------------------
   //int buf_id_A = 10;
   //int buf_id_B = 20;
-  //comm.register_buffer(buf_A, size_bytes, buf_id_A);
-  //comm.register_buffer(buf_B, size_bytes, buf_id_B);
+  //comm.register_buffer(buf_A_dev, size_bytes, buf_id_A);
+  //comm.register_buffer(buf_B_dev, size_bytes, buf_id_B);
   //comm.barrier();
   //
   //int target_rank = 1; 
@@ -399,8 +399,8 @@ int main(int argc, char** argv) {
   //std::vector<GpuComm::Request> reqs_rma;
 
   //if (rank == 0) {
-  //  reqs_rma.push_back( comm.put(buf_A, count, target_rank, buf_id_A) );
-  //  reqs_rma.push_back( comm.put(buf_B, count, target_rank, buf_id_B) );
+  //  reqs_rma.push_back( comm.put(buf_A_dev, count, target_rank, buf_id_A) );
+  //  reqs_rma.push_back( comm.put(buf_B_dev, count, target_rank, buf_id_B) );
 
   //  for(auto& req : reqs) req.wait();
   //  std::cout << rank << ": rank 0 Put data (RMA) into A and B buffers." << std::endl;
@@ -410,6 +410,8 @@ int main(int argc, char** argv) {
   //comm.unlock_buffer(target_rank, buf_id_B);
   //comm.barrier();
 
+  CHECK_HIP(hipMemcpy(buf_A_host.data(), buf_A_dev, size_bytes, hipMemcpyDeviceToHost));
+  CHECK_HIP(hipMemcpy(buf_B_host.data(), buf_B_dev, size_bytes, hipMemcpyDeviceToHost));
 
   // --------------------------------------------------
   // TEST 2: SEND / RECV
@@ -420,9 +422,9 @@ int main(int argc, char** argv) {
   int tag = 42;
 
   if (rank == 0) {
-    reqs_p2p.push_back(comm.send(buf_C, count, 1, tag));
+    reqs_p2p.push_back(comm.send(buf_C_dev, count, 1, tag));
   } else if (rank == 1) {
-    reqs_p2p.push_back(comm.recv(buf_C, count, 0, tag));
+    reqs_p2p.push_back(comm.recv(buf_C_dev, count, 0, tag));
   }
 
   comm.end_sendrecv();
@@ -431,12 +433,13 @@ int main(int argc, char** argv) {
   
   std::cout << rank << ": finished send/recv into C buffer." << std::endl;
 
+  CHECK_HIP(hipMemcpy(buf_C_host.data(), buf_C_dev, size_bytes, hipMemcpyDeviceToHost));
 
 
   //--------------------------------------------------
-  CHECK_HIP(hipFree(buf_A));
-  CHECK_HIP(hipFree(buf_B));
-  CHECK_HIP(hipFree(buf_C));
+  CHECK_HIP(hipFree(buf_A_dev));
+  CHECK_HIP(hipFree(buf_B_dev));
+  CHECK_HIP(hipFree(buf_C_dev));
   CHECK_HIP(hipStreamDestroy(stream));
 
   return 0;

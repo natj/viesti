@@ -501,31 +501,29 @@ int main(int argc, char** argv) {
   // we can now send and receive inside of this epoch
   //NCCL treats all calls between start and end as a single call to many devices.
 
-  std::cout << rank << ": start " << buf_C_host[0] << std::endl;
-
+  //std::cout << rank << ": start " << buf_C_host[0] << std::endl;
   std::vector<viesti::Request> reqs_p2p;
   int tag = 42;
 
-  //if (rank == 0) {
+  if (rank == 0) {
     reqs_p2p.push_back(comm.send(buf_C_dev, count, 1, tag));
-    std::cout << rank << ": send " << buf_C_host[0] << std::endl;
-  //} else if (rank == 1) {
+    //std::cout << rank << ": send " << buf_C_host[0] << std::endl;
+  } else if (rank == 1) {
     reqs_p2p.push_back(comm.recv(buf_C_dev, count, 0, tag));
-    std::cout << rank << ": recv " << buf_C_host[0] << std::endl;
-  //}
+    //std::cout << rank << ": recv " << buf_C_host[0] << std::endl;
+  }
 
   comm.end_sendrecv(); // close comm epoch and launch tasks on GPU
-  std::cout << rank << ": end " << buf_C_host[0] << std::endl;
+  //std::cout << rank << ": end " << buf_C_host[0] << std::endl;
 
   for(auto& req : reqs_p2p) req.wait(); // wait until messages have been transferred
-  std::cout << rank << ": end wait" << buf_C_host[0] << std::endl;
+  //std::cout << rank << ": end wait" << buf_C_host[0] << std::endl;
   
 
   CHECK_HIP(hipMemcpy(buf_C_host.data(), buf_C_dev, size_bytes, hipMemcpyDeviceToHost));
 
-  std::cout << rank << ": memcopy" << buf_C_host[0] << std::endl;
-
-  std::cout << rank << ": finished send/recv into C buffer: " << buf_C_host[0] << std::endl;
+  //std::cout << rank << ": memcopy" << buf_C_host[0] << std::endl;
+  //std::cout << rank << ": finished send/recv into C buffer: " << buf_C_host[0] << std::endl;
 
   //--------------------------------------------------
   CHECK_HIP(hipFree(buf_A_dev));

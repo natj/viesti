@@ -12,6 +12,13 @@ The library supports simultaneous usage of different backends for One-Sided (RMA
 * **Modern C++**: Type-safe, templated API with automatic data type deduction (`float`, `double`, `int`).
 * **Unified Request Management**: A single concrete `Request` class handles both MPI requests and HIP events/streams.
 
+## TODOs 
+
+- abstractify cuda/hip backends to gpuStream_t etc. 
+- add an empty constructor Communicator() for jumpstarting corgi, stream needs to be set later by the user
+- check if NCCL synchronization needs to be done via syncStream or syncEvent?
+- add p2p implemented with active MPI_RMA commands (so-called channel-specified P2P that uses MPI_Group between origin-dest to handle comms)
+
 
 ## Compilation
 

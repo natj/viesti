@@ -1,5 +1,5 @@
 # CXX      = hipcc
-SRC      = viesti.c++
+SRC      = main.c++
 TARGET   = viesti
 
 # --- Configuration Flags ---

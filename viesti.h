@@ -31,6 +31,35 @@
 
 namespace viesti {
 
+//-------------------------------------------------- 
+// basic AMD gpu definitions 
+// TODO: abstractify HIP/CUDA commands to gpuStream_t etc
+//#ifdef HIP_GPU
+//  hipStream_t;
+//  hipEvent_t;
+//  hipStreamCreate
+//  hipMalloc
+//  hipMemcpy
+//  hipMemcpyHostToDevice
+//  hipMemcpyDeviceToHost
+//  hipFree
+//  hipStreamDestroy
+//  hipSuccess
+//  hipGetErrorString
+//  hipEventCreate
+//  hipEventDestroy
+//  hipStreamSynchronize
+//  hipEventSynchronize
+//#endif
+//
+////-------------------------------------------------- 
+//// basic AMD gpu definitions 
+//#ifdef CUDA_GPU
+//
+//#endif
+
+
+
 enum class DataType { FLOAT, DOUBLE, INT, UNKNOWN };
 
 // Type Traits for Automatic Type Deduction
@@ -66,6 +95,21 @@ namespace {
     }
 }
 #define CHECK_HIP(cmd) viesti::check_hip(cmd, __FILE__, __LINE__)
+
+
+
+//class Stream {
+//public:
+//    enum class Type { MPI, HIP };
+//private:
+//    Type type_;
+//
+//    hipStream_t stream_;
+//
+//public:
+//    Stream() : type_(Type::MPI), stream_(nullptr) = default;
+//    Stream(hipStream_t stream) : type_(Type::HIP), stream_(stream_) = default;
+//};
 
 // --------------------------------------------------------------------------
 // Concrete Unified Request Class
@@ -141,7 +185,6 @@ public:
             }
         } else {
             //CHECK_HIP(hipEventSynchronize(handle_.hip_event));
-	    // TODO: use event or stream to synchronize the send/recv?
             CHECK_HIP(hipStreamSynchronize(stream_));
         }
         active_ = false;
@@ -170,6 +213,12 @@ private:
 #endif
 
 public:
+      
+    // partial constructor for jumpstarting the library
+    //Communicator() {
+    //}
+
+     // full constructor
     Communicator(int* argc, char*** argv, hipStream_t stream = nullptr) {
         // 1. Initialize MPI (Required for bootstrap even in full HIP mode)
         int initialized;
